@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "./ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
@@ -15,10 +15,13 @@ contract ProjectOne is ERC721, Ownable {
     string public uriPrefix = "";
     string public uriSuffix = ".json";
     string public hiddenMetadataUri;
+    string public cagedMetadataUri;
 
     uint256 public cost = 0.01 ether;
     uint256 public maxSupply = 8888;
     uint256 public maxMintAmountPerTx = 10;
+
+    mapping(uint256 => bool) uncaged;
 
     mapping(address => bool) public whitelistClaimed;
     bytes32 public merkleRoot;
@@ -86,6 +89,14 @@ contract ProjectOne is ERC721, Ownable {
         return cost;
     }
 
+    function uncage(uint256 _tokenId) public {
+        require(
+            block.timestamp > uncageTimer[_tokenId],
+            "You have to wait more to uncage your Owl!"
+        );
+        uncaged[_tokenId] = true;
+    }
+
     function tokensOfOwner(address _owner)
         public
         view
@@ -127,16 +138,29 @@ contract ProjectOne is ERC721, Ownable {
             return hiddenMetadataUri;
         }
         string memory currentBaseURI = _baseURI();
-        return
-            bytes(currentBaseURI).length > 0
-                ? string(
-                    abi.encodePacked(
-                        currentBaseURI,
-                        _tokenId.toString(),
-                        uriSuffix
+        if (uncaged[_tokenId] == true) {
+            return
+                bytes(currentBaseURI).length > 0
+                    ? string(
+                        abi.encodePacked(
+                            currentBaseURI,
+                            _tokenId.toString(),
+                            uriSuffix
+                        )
                     )
-                )
-                : "";
+                    : "";
+        } else {
+            return
+                bytes(cagedMetadataUri).length > 0
+                    ? string(
+                        abi.encodePacked(
+                            cagedMetadataUri,
+                            _tokenId.toString(),
+                            uriSuffix
+                        )
+                    )
+                    : "";
+        }
     }
 
     function setRevealed(bool _state) public onlyOwner {
@@ -167,6 +191,10 @@ contract ProjectOne is ERC721, Ownable {
 
     function setMerkleRoot(bytes32 _newMerkleRoot) public onlyOwner {
         merkleRoot = _newMerkleRoot;
+    }
+
+    function setCagedUri(string memory _cagedURI) public onlyOwner {
+        cagedMetadataUri = _cagedURI;
     }
 
     function setUriPrefix(string memory _uriPrefix) public onlyOwner {
