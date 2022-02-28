@@ -162,7 +162,7 @@ contract ProjectOne is ERC721, Ownable {
     }
 
     function setPresale(bool _bool) public onlyOwner {
-        presale = _newValue;
+        presale = _bool;
     }
 
     function setMerkleRoot(bytes32 _newMerkleRoot) public onlyOwner {
