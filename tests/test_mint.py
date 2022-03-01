@@ -1,4 +1,7 @@
 from brownie import ProjectOne, accounts
+import time
+
+# Test made with a 60s wait time to uncage the owl
 
 
 def test_main():
@@ -32,3 +35,16 @@ def test_main():
     withdraw = one.withdraw({"from": owner})
     withdraw.wait(1)
     assert owner.balance() > balance1 + 90090000000000000
+    # Set caged uri
+    caged_uri = one.setCagedUri("caged", {"from": owner})
+    # Set uncaged uri
+    uncaged_uri = one.setUriPrefix("uncaged", {"from": owner})
+    # Get caged token uri
+    token_uri1 = one.tokenURI(1, {"from": owner})
+    assert token_uri1 == "caged1.json"
+    # Uncage owl
+    time.sleep(60)
+    uncage = one.uncage(1, {"from": owner})
+    # Get uncaged token uri
+    token_uri2 = one.tokenURI(1, {"from": owner})
+    assert token_uri2 == "uncaged1.json"
