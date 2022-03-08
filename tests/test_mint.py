@@ -1,4 +1,4 @@
-from brownie import ProjectOne, accounts
+from brownie import LegendaryOwls, accounts
 import time
 
 # Test made with a 60s wait time to uncage the owl
@@ -7,14 +7,14 @@ import time
 def test_main():
     # Deploy
     owner = accounts[0]
-    one = ProjectOne.deploy({"from": owner})
+    one = LegendaryOwls.deploy({"from": owner})
     print("Contract deployed!")
     # Unpause
     unpause = one.setPaused(False, {"from": owner})
     print("Contract unpaused")
     # Mint
     price = one.getPrice({"from": owner})
-    assert price == 10000000000000000
+    assert price == 80000000000000000
     mint1 = one.mint(1, {"from": accounts[1], "amount": price})
     mint2 = one.mint(2, {"from": accounts[2], "amount": price * 2})
     mint3 = one.mint(3, {"from": accounts[3], "amount": price * 3})

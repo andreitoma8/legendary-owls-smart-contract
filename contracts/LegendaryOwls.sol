@@ -1,25 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./ERC721.sol";
+import "./ERC721Votes.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-contract ProjectOne is ERC721, Ownable {
+contract LegendaryOwls is ERC721, Ownable {
     using Strings for uint256;
     using Counters for Counters.Counter;
 
     Counters.Counter private supply;
 
     string public uriPrefix = "";
-    string public uriSuffix = ".json";
+    string public constant uriSuffix = ".json";
     string public hiddenMetadataUri;
     string public cagedMetadataUri;
 
-    uint256 public cost = 0.01 ether;
-    uint256 public maxSupply = 8888;
-    uint256 public maxMintAmountPerTx = 10;
+    uint256 public cost = 0.08 ether;
+    unit256 public constant maxSupply = 8888;
 
     mapping(uint256 => bool) uncaged;
 
@@ -30,15 +29,11 @@ contract ProjectOne is ERC721, Ownable {
     bool public paused = true;
     bool public revealed = false;
 
-    constructor() ERC721("Project One", "ONE") {
+    constructor() ERC721("Legendary Owls", "OWL") {
         setHiddenMetadataUri("ipfs://__CID__/hidden.json");
     }
 
     modifier mintCompliance(uint256 _mintAmount) {
-        require(
-            _mintAmount > 0 && _mintAmount <= maxMintAmountPerTx,
-            "Invalid mint amount!"
-        );
         require(
             supply.current() + _mintAmount <= maxSupply,
             "Max supply exceeded!"
@@ -49,6 +44,8 @@ contract ProjectOne is ERC721, Ownable {
     function totalSupply() public view returns (uint256) {
         return supply.current();
     }
+
+    // Mint functions
 
     function mint(uint256 _mintAmount)
         public
@@ -68,6 +65,7 @@ contract ProjectOne is ERC721, Ownable {
     {
         require(presale, "Presale is not active.");
         require(!whitelistClaimed[msg.sender], "Address has already claimed.");
+        require(_mintAmount < 3);
         bytes32 leaf = keccak256(abi.encodePacked((msg.sender)));
         require(
             MerkleProof.verify(_merkleProof, merkleRoot, leaf),
@@ -85,9 +83,7 @@ contract ProjectOne is ERC721, Ownable {
         _mintLoop(_receiver, _mintAmount);
     }
 
-    function getPrice() public view returns (uint256) {
-        return cost;
-    }
+    // URI functions
 
     function uncage(uint256 _tokenId) public {
         require(
@@ -95,6 +91,12 @@ contract ProjectOne is ERC721, Ownable {
             "You have to wait more to uncage your Owl!"
         );
         uncaged[_tokenId] = true;
+    }
+
+    function checkUncaged(uint256 _tokenId) public view returns (bool) {
+        if (uncaged[_tokenId] == true) {
+            return true;
+        }
     }
 
     function tokensOfOwner(address _owner)
@@ -106,9 +108,7 @@ contract ProjectOne is ERC721, Ownable {
         uint256[] memory ownedTokenIds = new uint256[](ownerTokenCount);
         uint256 currentTokenId = 1;
         uint256 ownedTokenIndex = 0;
-        while (
-            ownedTokenIndex < ownerTokenCount && currentTokenId <= maxSupply
-        ) {
+        while (ownedTokenIndex < ownerTokenCount && currentTokenId <= 8888) {
             address currentTokenOwner = ownerOf(currentTokenId);
 
             if (currentTokenOwner == _owner) {
@@ -138,7 +138,7 @@ contract ProjectOne is ERC721, Ownable {
             return hiddenMetadataUri;
         }
         string memory currentBaseURI = _baseURI();
-        if (uncaged[_tokenId] == true) {
+        if (checkUncaged(_tokenId) == true) {
             return
                 bytes(currentBaseURI).length > 0
                     ? string(
@@ -163,21 +163,6 @@ contract ProjectOne is ERC721, Ownable {
         }
     }
 
-    function setRevealed(bool _state) public onlyOwner {
-        revealed = _state;
-    }
-
-    function setCost(uint256 _cost) public onlyOwner {
-        cost = _cost;
-    }
-
-    function setMaxMintAmountPerTx(uint256 _maxMintAmountPerTx)
-        public
-        onlyOwner
-    {
-        maxMintAmountPerTx = _maxMintAmountPerTx;
-    }
-
     function setHiddenMetadataUri(string memory _hiddenMetadataUri)
         public
         onlyOwner
@@ -185,16 +170,12 @@ contract ProjectOne is ERC721, Ownable {
         hiddenMetadataUri = _hiddenMetadataUri;
     }
 
-    function setPresale(bool _bool) public onlyOwner {
-        presale = _bool;
-    }
-
-    function setMerkleRoot(bytes32 _newMerkleRoot) public onlyOwner {
-        merkleRoot = _newMerkleRoot;
-    }
-
     function setCagedUri(string memory _cagedURI) public onlyOwner {
         cagedMetadataUri = _cagedURI;
+    }
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return uriPrefix;
     }
 
     function setUriPrefix(string memory _uriPrefix) public onlyOwner {
@@ -205,17 +186,45 @@ contract ProjectOne is ERC721, Ownable {
         uriSuffix = _uriSuffix;
     }
 
+    // Price functions
+
+    function setPrice(uint256 _price) public onlyOwner {
+        cost = _price;
+    }
+
+    function getPrice() public view returns (uint256) {
+        return cost;
+    }
+
+    // State functions
+
+    function setPresale(bool _bool) public onlyOwner {
+        presale = _bool;
+    }
+
     function setPaused(bool _state) public onlyOwner {
         paused = _state;
     }
 
+    function setRevealed(bool _state) public onlyOwner {
+        revealed = _state;
+    }
+
+    // Withdraw function
+
     function withdraw() public onlyOwner {
         (bool hs, ) = payable(0xA4Ad17ef801Fa4bD44b758E5Ae8B2169f59B666F).call{
-            value: (address(this).balance * 5) / 100
+            value: (address(this).balance * 6) / 100
         }("");
         require(hs);
         (bool os, ) = payable(owner()).call{value: address(this).balance}("");
         require(os);
+    }
+
+    // Utils
+
+    function setMerkleRoot(bytes32 _newMerkleRoot) public onlyOwner {
+        merkleRoot = _newMerkleRoot;
     }
 
     function _mintLoop(address _receiver, uint256 _mintAmount) internal {
@@ -225,7 +234,5 @@ contract ProjectOne is ERC721, Ownable {
         }
     }
 
-    function _baseURI() internal view virtual override returns (string memory) {
-        return uriPrefix;
-    }
+    // Giveaways functions
 }
