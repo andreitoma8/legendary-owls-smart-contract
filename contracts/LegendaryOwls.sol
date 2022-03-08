@@ -18,7 +18,7 @@ contract LegendaryOwls is ERC721, Ownable {
     string public cagedMetadataUri;
 
     uint256 public cost = 0.08 ether;
-    unit256 public constant maxSupply = 8888;
+    uint256 public constant maxSupply = 8888;
 
     mapping(uint256 => bool) uncaged;
 
@@ -180,10 +180,6 @@ contract LegendaryOwls is ERC721, Ownable {
 
     function setUriPrefix(string memory _uriPrefix) public onlyOwner {
         uriPrefix = _uriPrefix;
-    }
-
-    function setUriSuffix(string memory _uriSuffix) public onlyOwner {
-        uriSuffix = _uriSuffix;
     }
 
     // Price functions
