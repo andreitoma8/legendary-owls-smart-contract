@@ -4,7 +4,7 @@
 pragma solidity ^0.8.0;
 
 import "./ERC721.sol";
-import "@openzeppelin/contracts/governance/utils/Votes.sol";
+import "./Votes.sol";
 
 /**
  * @dev Extension of ERC721 to support voting and delegation as implemented by {Votes}, where each individual NFT counts
@@ -36,6 +36,7 @@ abstract contract ERC721Votes is ERC721, Votes {
      */
     function _getVotingUnits(address account)
         internal
+        view
         virtual
         override
         returns (uint256)
