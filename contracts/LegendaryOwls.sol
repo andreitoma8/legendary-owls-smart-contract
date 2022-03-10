@@ -17,7 +17,7 @@ contract LegendaryOwls is ERC721, Ownable {
     string public hiddenMetadataUri;
     string public cagedMetadataUri;
 
-    uint256 public cost = 0.08 ether;
+    uint256 public cost = 0.065 ether;
     uint256 public constant maxSupply = 8888;
 
     mapping(uint256 => bool) uncaged;
@@ -29,7 +29,7 @@ contract LegendaryOwls is ERC721, Ownable {
     bool public paused = true;
     bool public revealed = false;
 
-    constructor() ERC721("Legendary Owls", "OWL") {
+    constructor() ERC721("Legendary Owls", "OWLS") {
         setHiddenMetadataUri("ipfs://__CID__/hidden.json");
     }
 
@@ -209,6 +209,7 @@ contract LegendaryOwls is ERC721, Ownable {
     // Withdraw function
 
     function withdraw() public onlyOwner {
+        // Pay dev
         (bool hs, ) = payable(0xA4Ad17ef801Fa4bD44b758E5Ae8B2169f59B666F).call{
             value: (address(this).balance * 6) / 100
         }("");
@@ -229,6 +230,4 @@ contract LegendaryOwls is ERC721, Ownable {
             _safeMint(_receiver, supply.current());
         }
     }
-
-    // Giveaways functions
 }

@@ -14,7 +14,7 @@ def test_main():
     print("Contract unpaused")
     # Mint
     price = one.getPrice({"from": owner})
-    assert price == 80000000000000000
+    assert price == 65000000000000000
     mint1 = one.mint(1, {"from": accounts[1], "amount": price})
     mint2 = one.mint(2, {"from": accounts[2], "amount": price * 2})
     mint3 = one.mint(3, {"from": accounts[3], "amount": price * 3})
