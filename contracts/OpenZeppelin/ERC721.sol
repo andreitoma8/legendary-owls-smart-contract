@@ -20,6 +20,9 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     using Address for address;
     using Strings for uint256;
 
+    // State for transfers
+    bool public canTransfer;
+
     // Token name
     string private _name;
 
@@ -362,7 +365,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
         _balances[to] += 1;
         _owners[tokenId] = to;
-        uncageTimer[tokenId] = block.timestamp + 2592000;
+        uncageTimer[tokenId] = block.timestamp + 300; //2592000;
 
         emit Transfer(address(0), to, tokenId);
 
@@ -411,6 +414,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         address to,
         uint256 tokenId
     ) internal virtual {
+        require(canTransfer, "Token transfers are not enabled.");
         require(
             ERC721.ownerOf(tokenId) == from,
             "ERC721: transfer from incorrect owner"
@@ -425,7 +429,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         _balances[from] -= 1;
         _balances[to] += 1;
         _owners[tokenId] = to;
-        uncageTimer[tokenId] = block.timestamp + 2592000;
+        uncageTimer[tokenId] = block.timestamp + 300; //2592000;
 
         emit Transfer(from, to, tokenId);
 

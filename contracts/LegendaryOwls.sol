@@ -6,13 +6,13 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-contract LegendaryOwls is ERC721, Ownable {
+contract LegendaryOwls is ERC721Votes, Ownable {
     using Strings for uint256;
     using Counters for Counters.Counter;
 
     Counters.Counter private supply;
 
-    string public uriPrefix = "";
+    string public uriPrefix;
     string public constant uriSuffix = ".json";
     string public hiddenMetadataUri;
     string public cagedMetadataUri;
@@ -22,23 +22,38 @@ contract LegendaryOwls is ERC721, Ownable {
 
     mapping(uint256 => bool) uncaged;
 
+    address admin;
+
     mapping(address => bool) public whitelistClaimed;
     bytes32 public merkleRoot;
 
-    bool public presale = false;
     bool public paused = true;
+    bool public presale = false;
     bool public revealed = false;
 
-    constructor() ERC721("Legendary Owls", "OWLS") {
-        setHiddenMetadataUri("ipfs://__CID__/hidden.json");
-    }
+    constructor() ERC721("Legendary Owls", "OWLS") {}
+
+    // Modifiers
 
     modifier mintCompliance(uint256 _mintAmount) {
+        require(_mintAmount > 0 && _mintAmount <= 15, "Invalid mint amount!");
         require(
             supply.current() + _mintAmount <= maxSupply,
             "Max supply exceeded!"
         );
         _;
+    }
+
+    modifier onlyOwnerAndAdmin() {
+        require(
+            owner() == _msgSender() || admin == msg.sender,
+            "Not owner or Admin"
+        );
+        _;
+    }
+
+    function setAdmin(address _admin) public onlyOwner {
+        admin = _admin;
     }
 
     function totalSupply() public view returns (uint256) {
@@ -78,7 +93,7 @@ contract LegendaryOwls is ERC721, Ownable {
     function mintForAddress(uint256 _mintAmount, address _receiver)
         public
         mintCompliance(_mintAmount)
-        onlyOwner
+        onlyOwnerAndAdmin
     {
         _mintLoop(_receiver, _mintAmount);
     }
@@ -93,7 +108,7 @@ contract LegendaryOwls is ERC721, Ownable {
         uncaged[_tokenId] = true;
     }
 
-    function checkUncaged(uint256 _tokenId) public view returns (bool) {
+    function checkUncaged(uint256 _tokenId) public view returns (bool _caged) {
         if (uncaged[_tokenId] == true) {
             return true;
         }
@@ -165,12 +180,12 @@ contract LegendaryOwls is ERC721, Ownable {
 
     function setHiddenMetadataUri(string memory _hiddenMetadataUri)
         public
-        onlyOwner
+        onlyOwnerAndAdmin
     {
         hiddenMetadataUri = _hiddenMetadataUri;
     }
 
-    function setCagedUri(string memory _cagedURI) public onlyOwner {
+    function setCagedUri(string memory _cagedURI) public onlyOwnerAndAdmin {
         cagedMetadataUri = _cagedURI;
     }
 
@@ -178,13 +193,13 @@ contract LegendaryOwls is ERC721, Ownable {
         return uriPrefix;
     }
 
-    function setUriPrefix(string memory _uriPrefix) public onlyOwner {
+    function setUriPrefix(string memory _uriPrefix) public onlyOwnerAndAdmin {
         uriPrefix = _uriPrefix;
     }
 
     // Price functions
 
-    function setPrice(uint256 _price) public onlyOwner {
+    function setPrice(uint256 _price) public onlyOwnerAndAdmin {
         cost = _price;
     }
 
@@ -194,22 +209,25 @@ contract LegendaryOwls is ERC721, Ownable {
 
     // State functions
 
-    function setPresale(bool _bool) public onlyOwner {
+    function setPresale(bool _bool) public onlyOwnerAndAdmin {
         presale = _bool;
     }
 
-    function setPaused(bool _state) public onlyOwner {
+    function setPaused(bool _state) public onlyOwnerAndAdmin {
         paused = _state;
     }
 
-    function setRevealed(bool _state) public onlyOwner {
+    function setRevealed(bool _state) public onlyOwnerAndAdmin {
         revealed = _state;
+    }
+
+    function setCanTransfer(bool _state) public onlyOwnerAndAdmin {
+        canTransfer = _state;
     }
 
     // Withdraw function
 
     function withdraw() public onlyOwner {
-        // Pay dev
         (bool hs, ) = payable(0xA4Ad17ef801Fa4bD44b758E5Ae8B2169f59B666F).call{
             value: (address(this).balance * 6) / 100
         }("");
@@ -220,7 +238,7 @@ contract LegendaryOwls is ERC721, Ownable {
 
     // Utils
 
-    function setMerkleRoot(bytes32 _newMerkleRoot) public onlyOwner {
+    function setMerkleRoot(bytes32 _newMerkleRoot) public onlyOwnerAndAdmin {
         merkleRoot = _newMerkleRoot;
     }
 
@@ -230,4 +248,8 @@ contract LegendaryOwls is ERC721, Ownable {
             _safeMint(_receiver, supply.current());
         }
     }
+
+    receive() external payable {}
+
+    // Giveaways functions
 }
