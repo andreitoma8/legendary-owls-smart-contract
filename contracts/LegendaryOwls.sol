@@ -250,6 +250,4 @@ contract LegendaryOwls is ERC721Votes, Ownable {
     }
 
     receive() external payable {}
-
-    // Giveaways functions
 }
