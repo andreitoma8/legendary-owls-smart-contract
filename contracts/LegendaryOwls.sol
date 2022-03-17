@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./OpenZeppelin/ERC721Votes.sol";
+import "./OpenZeppelin/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-contract LegendaryOwls is ERC721Votes, Ownable {
+contract LegendaryOwls is ERC721, Ownable {
     using Strings for uint256;
     using Counters for Counters.Counter;
 
