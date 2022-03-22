@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MIT
+// Made by andreitoma8
 pragma solidity ^0.8.0;
 
 import "./SmartContracts/ERC721.sol";
@@ -122,6 +123,15 @@ contract LegendaryOwls is ERC721, Ownable {
         onlyOwnerAndAdmin
     {
         _mintLoop(_receiver, _mintAmount);
+    }
+
+    // Function used for mass giveaway
+    function nftGiveaway(uint256[] memory _owners) public onlyOwnerAndAdmin {
+        uint256 length = _owners.length;
+        for (uint256 i = 0; i < length; i++) {
+            address winner = ownerOf(_owners[i]);
+            _mintLoop(winner, 1);
+        }
     }
 
     ///////////////////
