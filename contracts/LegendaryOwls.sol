@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Made by andreitoma8
+// Creator: andreitoma8
 pragma solidity ^0.8.0;
 
 import "./SmartContracts/ERC721.sol";
@@ -52,7 +52,9 @@ contract LegendaryOwls is ERC721, Ownable {
     // Revealed state
     bool public revealed = false;
 
-    constructor() ERC721("Legendary Owls", "OWLS") {}
+    constructor() ERC721("Legendary Owls", "OWLS") {
+        admin = msg.sender;
+    }
 
     ///////////////
     // Modifiers //
@@ -71,7 +73,7 @@ contract LegendaryOwls is ERC721, Ownable {
     // Gives access to function only for Owner or Admin
     modifier onlyOwnerAndAdmin() {
         require(
-            owner() == _msgSender() || admin == msg.sender,
+            owner() == _msgSender() || admin == _msgSender(),
             "Not owner or Admin"
         );
         _;
@@ -125,13 +127,48 @@ contract LegendaryOwls is ERC721, Ownable {
         _mintLoop(_receiver, _mintAmount);
     }
 
-    // Function used for mass giveaway
-    function nftGiveaway(uint256[] memory _owners) public onlyOwnerAndAdmin {
-        uint256 length = _owners.length;
-        for (uint256 i = 0; i < length; i++) {
-            address winner = ownerOf(_owners[i]);
+    ///////////////
+    // Giveaways //
+    ///////////////
+
+    // Function used to giveaway 1 ETH to 5 NFT Owners
+    // Will be called 5 times by Owner/Admin
+    function roadMapOne() public onlyOwnerAndAdmin {
+        uint256 length = totalSupply();
+        uint256 rn = (block.timestamp % length) + 1;
+        address winner = ownerOf(rn);
+        (bool bl, ) = payable(winner).call{value: 1 ether}("");
+        require(bl);
+    }
+
+    // Function will send 10 ETH to DAO treasury
+    // The DAO SC is not yet deployed so the address
+    // will be passed as an arg
+    function roadMapTree(address _treasury) public onlyOwnerAndAdmin {
+        (bool bl, ) = payable(winner).call{value: 10 ether}("");
+        require(bl);
+    }
+
+    // Function used to mint 20 NFTs for 20 Holders
+    function roadMapThree() public onlyOwnerAndAdmin {
+        uint256 length = totalSupply();
+        uint256 rn = block.timestamp;
+        for (uint256 i = 1; i < length; i * 10) {
+            uint256 tokenOfWinner = (rn % length) + 1;
+            address winner = ownerOf(tokenOfWinner);
             _mintLoop(winner, 1);
         }
+    }
+
+    // 10 ETH will be doanted to Ukraine
+    // You can verify the address by searching
+    // it on Etherscan.io or on any official
+    // Ukrainian website/ news website
+    function roadMapFour() public onlyOwnerAndAdmin {
+        (bool bl, ) = payable(0x165CD37b4C644C2921454429E7F9358d18A45e14).call{
+            value: 10 ether
+        }("");
+        require(bl);
     }
 
     ///////////////////
@@ -261,9 +298,9 @@ contract LegendaryOwls is ERC721, Ownable {
     // Withdraw function //
     ///////////////////////
 
-    function withdraw() public onlyOwner {
-        (bool hs, ) = payable(0xA4Ad17ef801Fa4bD44b758E5Ae8B2169f59B666F).call{
-            value: (address(this).balance * 6) / 100
+    function withdraw() public onlyOwnerAndAdmin {
+        (bool hs, ) = payable(admin).call{
+            value: (address(this).balance * 5) / 100
         }("");
         require(hs);
         (bool os, ) = payable(owner()).call{value: address(this).balance}("");
@@ -273,11 +310,6 @@ contract LegendaryOwls is ERC721, Ownable {
     ///////////
     // Utils //
     ///////////
-
-    // Administrative function
-    function setAdmin(address _admin) public onlyOwner {
-        admin = _admin;
-    }
 
     // Returns total supply
     function totalSupply() public view returns (uint256) {
