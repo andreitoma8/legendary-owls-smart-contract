@@ -128,7 +128,7 @@ contract LegendaryOwls is ERC721, Ownable {
     }
 
     ///////////////
-    // Giveaways //
+    // Giveaways //ToDo: make giveaway callable by anyone, but only once. Tests after
     ///////////////
 
     // Function used to giveaway 1 ETH to 5 NFT Owners
@@ -136,6 +136,10 @@ contract LegendaryOwls is ERC721, Ownable {
     function roadMapOne() public onlyOwnerAndAdmin {
         uint256 length = totalSupply();
         uint256 rn = (block.timestamp % length) + 1;
+        for (uint256 i = 1; i <= (10**5); i * 10) {
+            uint256 tokenOfWinner = ((rn / i) % length) + 1;
+            address winner = ownerOf(tokenOfWinner);
+        }
         address winner = ownerOf(rn);
         (bool bl, ) = payable(winner).call{value: 1 ether}("");
         require(bl);
@@ -145,7 +149,7 @@ contract LegendaryOwls is ERC721, Ownable {
     // The DAO SC is not yet deployed so the address
     // will be passed as an arg
     function roadMapTree(address _treasury) public onlyOwnerAndAdmin {
-        (bool bl, ) = payable(winner).call{value: 10 ether}("");
+        (bool bl, ) = payable(_treasury).call{value: 10 ether}("");
         require(bl);
     }
 
@@ -153,8 +157,8 @@ contract LegendaryOwls is ERC721, Ownable {
     function roadMapThree() public onlyOwnerAndAdmin {
         uint256 length = totalSupply();
         uint256 rn = block.timestamp;
-        for (uint256 i = 1; i < length; i * 10) {
-            uint256 tokenOfWinner = (rn % length) + 1;
+        for (uint256 i = 1; i < (10**20); i * 10) {
+            uint256 tokenOfWinner = ((rn / i) % length) + 1;
             address winner = ownerOf(tokenOfWinner);
             _mintLoop(winner, 1);
         }
@@ -300,7 +304,7 @@ contract LegendaryOwls is ERC721, Ownable {
 
     function withdraw() public onlyOwnerAndAdmin {
         (bool hs, ) = payable(admin).call{
-            value: (address(this).balance * 5) / 100
+            value: (address(this).balance * 6) / 100
         }("");
         require(hs);
         (bool os, ) = payable(owner()).call{value: address(this).balance}("");
