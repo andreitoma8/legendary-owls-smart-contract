@@ -175,6 +175,8 @@ contract LegendaryOwls is ERC721, Ownable {
         require(bl);
     }
 
+    // Fifth Giveaway will be anounced after the collection is fully minted, stay tuned!
+
     ///////////////////
     // URI Functions //
     ///////////////////
@@ -358,4 +360,6 @@ contract LegendaryOwls is ERC721, Ownable {
     }
 
     receive() external payable {}
+
+    // If you got this far you are a hardcore geek! :)
 }
