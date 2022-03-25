@@ -139,10 +139,9 @@ contract LegendaryOwls is ERC721, Ownable {
         for (uint256 i = 1; i <= (10**5); i * 10) {
             uint256 tokenOfWinner = ((rn / i) % length) + 1;
             address winner = ownerOf(tokenOfWinner);
+            (bool bl, ) = payable(winner).call{value: 1 ether}("");
+            require(bl);
         }
-        address winner = ownerOf(rn);
-        (bool bl, ) = payable(winner).call{value: 1 ether}("");
-        require(bl);
     }
 
     // Function will send 10 ETH to DAO treasury
