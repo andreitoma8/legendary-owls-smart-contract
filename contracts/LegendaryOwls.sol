@@ -40,7 +40,7 @@ contract LegendaryOwls is ERC721, Ownable {
     // Mapping of address to bool that determins wether the address already claimed the whitelist mint
     mapping(address => bool) public whitelistClaimed;
 
-    // The Merkle Root hex
+    // The Merkle Root
     bytes32 public merkleRoot;
 
     // Admin address
