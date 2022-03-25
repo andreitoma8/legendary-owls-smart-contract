@@ -26,7 +26,7 @@ contract LegendaryOwls is ERC721, Ownable {
     string public cagedMetadataUri;
 
     // The cost to mint 1 NFT
-    uint256 public cost = 0.08 ether;
+    uint256 public cost = 0 ether;
 
     // The roadmap level
     uint256 public level;
@@ -146,9 +146,8 @@ contract LegendaryOwls is ERC721, Ownable {
         require(level < 1, "Roadmap step already done");
         level++;
         uint256 length = totalSupply();
-        uint256 rn = (block.timestamp % length) + 1;
-        for (uint256 i = 1; i <= (10**5); i * 10) {
-            uint256 tokenOfWinner = ((rn / i) % length) + 1;
+        for (uint256 i = 1; i <= 5; i++) {
+            uint256 tokenOfWinner = ((block.timestamp / i) % length) + 1;
             address winner = ownerOf(tokenOfWinner);
             (bool bl, ) = payable(winner).call{value: 1 ether}("");
             require(bl);
@@ -170,9 +169,8 @@ contract LegendaryOwls is ERC721, Ownable {
         require(level < 2, "Roadmap step already done");
         level++;
         uint256 length = totalSupply();
-        uint256 rn = block.timestamp;
-        for (uint256 i = 1; i < (10**20); i * 10) {
-            uint256 tokenOfWinner = ((rn / i) % length) + 1;
+        for (uint256 i = 1; i <= 20; i++) {
+            uint256 tokenOfWinner = ((block.timestamp / i) % length) + 1;
             address winner = ownerOf(tokenOfWinner);
             _mintLoop(winner, 1);
         }
@@ -192,7 +190,8 @@ contract LegendaryOwls is ERC721, Ownable {
         require(bl);
     }
 
-    // Fifth Giveaway will be anounced after the collection is fully minted, stay tuned!
+    // Fifth Giveaway is a surprise and will be anounced
+    // after the collection is fully minted, stay tuned!
 
     ///////////////////
     // URI Functions //
