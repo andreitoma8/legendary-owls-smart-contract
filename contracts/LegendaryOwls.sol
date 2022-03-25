@@ -28,6 +28,9 @@ contract LegendaryOwls is ERC721, Ownable {
     // The cost to mint 1 NFT
     uint256 public cost = 0.08 ether;
 
+    // The roadmap level
+    uint256 public level;
+
     // The maximum supply of Owls
     uint256 public constant maxSupply = 8888;
 
@@ -128,12 +131,20 @@ contract LegendaryOwls is ERC721, Ownable {
     }
 
     ///////////////
-    // Giveaways //ToDo: make giveaway callable by anyone, but only once. Tests after
+    // Giveaways //
     ///////////////
+
+    // To ensure a high level of fairness, Roadmap functions have no modifier
+    // and can be called by everyone, but only after a specified amount of
+    // tokens has been minted and only once. Who's gona be the fastest one
+    // and get the tx that will start the giveaways? :)
 
     // Function used to giveaway 1 ETH to 5 NFT Owners
     // Will be called 5 times by Owner/Admin
-    function roadMapOne() public onlyOwnerAndAdmin {
+    function roadMapOne() public {
+        require(totalSupply() > 1777, "Not yet available");
+        require(level < 1, "Roadmap step already done");
+        level++;
         uint256 length = totalSupply();
         uint256 rn = (block.timestamp % length) + 1;
         for (uint256 i = 1; i <= (10**5); i * 10) {
@@ -147,13 +158,17 @@ contract LegendaryOwls is ERC721, Ownable {
     // Function will send 10 ETH to DAO treasury
     // The DAO SC is not yet deployed so the address
     // will be passed as an arg
-    function roadMapTree(address _treasury) public onlyOwnerAndAdmin {
+    function roadMapTwo(address _treasury) public onlyOwnerAndAdmin {
+        require(totalSupply() > 3555, "Not yet available");
         (bool bl, ) = payable(_treasury).call{value: 10 ether}("");
         require(bl);
     }
 
     // Function used to mint 20 NFTs for 20 Holders
-    function roadMapThree() public onlyOwnerAndAdmin {
+    function roadMapThree() public {
+        require(totalSupply() > 5332, "Not yet available");
+        require(level < 2, "Roadmap step already done");
+        level++;
         uint256 length = totalSupply();
         uint256 rn = block.timestamp;
         for (uint256 i = 1; i < (10**20); i * 10) {
@@ -167,7 +182,10 @@ contract LegendaryOwls is ERC721, Ownable {
     // You can verify the address by searching
     // it on Etherscan.io or on any official
     // Ukrainian website/ news website
-    function roadMapFour() public onlyOwnerAndAdmin {
+    function roadMapFour() public {
+        require(totalSupply() > 7110, "Not yet available");
+        require(level < 3, "Roadmap step already done");
+        level++;
         (bool bl, ) = payable(0x165CD37b4C644C2921454429E7F9358d18A45e14).call{
             value: 10 ether
         }("");
