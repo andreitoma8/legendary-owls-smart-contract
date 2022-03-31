@@ -161,16 +161,16 @@ contract LegendaryOwls is ERC721, Ownable {
         }
     }
 
-    // Function will send 10 ETH to DAO treasury
+    // Function will send 8 ETH to DAO treasury
     // The DAO SC is not yet deployed so the address
     // will be passed as an arg
     function roadMapTwo(address _treasury) public onlyOwnerAndAdmin {
         require(totalSupply() > 3555, "Not yet available");
-        (bool bl, ) = payable(_treasury).call{value: 10 ether}("");
+        (bool bl, ) = payable(_treasury).call{value: 8 ether}("");
         require(bl);
     }
 
-    // Function used to mint 20 NFTs for 20 Holders
+    // Function used to mint 20 NFTs for lucky 20 Holders
     function roadMapThree() public {
         require(totalSupply() > 5332, "Not yet available");
         require(level < 2, "Roadmap step already done");
@@ -183,22 +183,26 @@ contract LegendaryOwls is ERC721, Ownable {
         }
     }
 
-    // 10 ETH will be doanted to Ukraine
-    // You can verify the address by searching
-    // it on Etherscan.io or on any official
-    // Ukrainian website/ news website
-    function roadMapFour() public {
+    // 10 ETH will be doanted to a charity
+    // chosen by our community
+    function roadMapFour(address _charity) public onlyOwnerAndAdmin {
         require(totalSupply() > 7110, "Not yet available");
-        require(level < 3, "Roadmap step already done");
         level++;
-        (bool bl, ) = payable(0x165CD37b4C644C2921454429E7F9358d18A45e14).call{
-            value: 10 ether
-        }("");
+        (bool bl, ) = payable(_charity).call{value: 18 ether}("");
         require(bl);
     }
 
     // Fifth Giveaway is a surprise and will be anounced
     // after the collection is fully minted, stay tuned!
+
+    // Function will send 12 ETH to DAO treasury
+    // The DAO SC is not yet deployed so the address
+    // will be passed as an arg
+    function roadMapSix(address _treasury) public onlyOwnerAndAdmin {
+        require(totalSupply() > 8880, "Not yet available");
+        (bool bl, ) = payable(_treasury).call{value: 12 ether}("");
+        require(bl);
+    }
 
     ///////////////////
     // URI Functions //
