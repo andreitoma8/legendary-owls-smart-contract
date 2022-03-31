@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: MIT
-// Creator: andreitoma8
+// Creator: andreitoma
 pragma solidity ^0.8.0;
+
+//   _                              _                     ___           _
+//  | |    ___  __ _  ___ _ __   __| | __ _ _ __ _   _   / _ \__      _| |___
+//  | |   / _ \/ _` |/ _ \ '_ \ / _` |/ _` | '__| | | | | | | \ \ /\ / / / __|
+//  | |__|  __/ (_| |  __/ | | | (_| | (_| | |  | |_| | | |_| |\ V  V /| \__ \
+//  |_____\___|\__, |\___|_| |_|\__,_|\__,_|_|   \__, |  \___/  \_/\_/ |_|___/
+//             |___/                             |___/
 
 import "./SmartContracts/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -26,7 +33,7 @@ contract LegendaryOwls is ERC721, Ownable {
     string public cagedMetadataUri;
 
     // The cost to mint 1 NFT
-    uint256 public cost = 0 ether;
+    uint256 public cost = 0.07 ether;
 
     // The roadmap level
     uint256 public level;
@@ -63,9 +70,9 @@ contract LegendaryOwls is ERC721, Ownable {
     // Modifiers //
     ///////////////
 
-    // Keeps mint limit per tx to 15 and keeps max supply at 8888
+    // Keeps mint limit per tx to 5 and keeps max supply at 8888
     modifier mintCompliance(uint256 _mintAmount) {
-        require(_mintAmount > 0 && _mintAmount <= 15, "Invalid mint amount!");
+        require(_mintAmount > 0 && _mintAmount <= 5, "Invalid mint amount!");
         require(
             supply.current() + _mintAmount <= maxSupply,
             "Max supply exceeded!"
