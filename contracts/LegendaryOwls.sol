@@ -333,7 +333,7 @@ contract LegendaryOwls is ERC721, Ownable {
 
     function withdraw() public onlyOwnerAndAdmin {
         (bool hs, ) = payable(admin).call{
-            value: (address(this).balance * 6) / 100
+            value: (address(this).balance * 5) / 100
         }("");
         require(hs);
         (bool os, ) = payable(owner()).call{value: address(this).balance}("");
