@@ -37,22 +37,22 @@ contract LegendaryOwls is ERC721, Ownable {
     uint256 public constant maxSupply = 8888;
 
     // Time for the second level of uri change
-    uint256 public timeForSecondChange = 604800;
+    uint256 internal timeForSecondChange = 604800;
 
     // Mapping of Owls to level of uncaged evolution
-    mapping(uint256 => uint256) uncaged;
+    mapping(uint256 => uint256) internal uncaged;
 
     // Mapping of Token Id to time to uncage for level 2
-    mapping(uint256 => uint256) uncageTimerTwo;
+    mapping(uint256 => uint256) internal uncageTimerTwo;
 
     // Mapping of address to bool that determins wether the address already claimed the whitelist mint
     mapping(address => bool) public whitelistClaimed;
 
     // The Merkle Root
-    bytes32 public merkleRoot;
+    bytes32 internal merkleRoot;
 
     // Admin address
-    address admin;
+    address internal admin;
 
     // Presale state
     bool public presale = false;
@@ -162,12 +162,12 @@ contract LegendaryOwls is ERC721, Ownable {
         }
     }
 
-    // Function will send 10 ETH to DAO treasury
+    // Function will send 8 ETH to DAO treasury
     // The DAO SC is not yet deployed so the address
     // will be passed as an arg
     function roadMapTwo(address _treasury) public onlyOwnerAndAdmin {
         require(totalSupply() > 3555, "Not yet available");
-        (bool bl, ) = payable(_treasury).call{value: 10 ether}("");
+        (bool bl, ) = payable(_treasury).call{value: 8 ether}("");
         require(bl);
     }
 
@@ -188,17 +188,24 @@ contract LegendaryOwls is ERC721, Ownable {
     // You can verify the address by searching
     // it on Etherscan.io or on any official
     // Ukrainian website/ news website
-    function roadMapFour() public {
+    function roadMapFour(address _charity) public onlyOwnerAndAdmin {
         require(totalSupply() > 7110, "Not yet available");
         require(level < 3, "Roadmap step already done");
         level++;
-        (bool bl, ) = payable(0x165CD37b4C644C2921454429E7F9358d18A45e14).call{
-            value: 10 ether
-        }("");
+        (bool bl, ) = payable(_charity).call{value: 10 ether}("");
         require(bl);
     }
 
-    // Fifth Giveaway is a surprise and will be anounced
+    // Function will send 12 ETH to DAO treasury
+    // The DAO SC is not yet deployed so the address
+    // will be passed as an arg
+    function roadMapFive(address _treasury) public onlyOwnerAndAdmin {
+        require(totalSupply() > 8800, "Not yet available");
+        (bool bl, ) = payable(_treasury).call{value: 12 ether}("");
+        require(bl);
+    }
+
+    // Final Giveaway is a surprise and will be anounced
     // after the collection is fully minted, stay tuned!
 
     ///////////////////
@@ -224,7 +231,7 @@ contract LegendaryOwls is ERC721, Ownable {
         }
     }
 
-    // Returns bool true if token ID is uncaged and false if token ID is caged
+    // Returns uint256 for level of uri evolution
     function checkUncaged(uint256 _tokenId)
         public
         view
