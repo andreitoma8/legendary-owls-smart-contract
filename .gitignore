@@ -5,6 +5,4 @@ __pycache__
 build/
 reports/
 .env
-tests/
-contracts/Test.sol
 scripts/giveaways.py
