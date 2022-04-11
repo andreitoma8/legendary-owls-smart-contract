@@ -1,13 +1,6 @@
 // SPDX-License-Identifier: MIT
-// Creator: andreitoma
+// Creator: andreitoma8
 pragma solidity ^0.8.0;
-
-//   _                              _                     ___           _
-//  | |    ___  __ _  ___ _ __   __| | __ _ _ __ _   _   / _ \__      _| |___
-//  | |   / _ \/ _` |/ _ \ '_ \ / _` |/ _` | '__| | | | | | | \ \ /\ / / / __|
-//  | |__|  __/ (_| |  __/ | | | (_| | (_| | |  | |_| | | |_| |\ V  V /| \__ \
-//  |_____\___|\__, |\___|_| |_|\__,_|\__,_|_|   \__, |  \___/  \_/\_/ |_|___/
-//             |___/                             |___/
 
 import "./SmartContracts/ERC721.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
@@ -21,19 +14,21 @@ contract LegendaryOwls is ERC721, Ownable {
     Counters.Counter private supply;
 
     // The URI prefix for the main metadata
-    string public uriPrefix = "";
+    string internal uriPrefix;
 
     // Metadata file extension
-    string public constant uriSuffix = ".json";
+    string internal constant uriSuffix = ".json";
 
     // The URI prefix for the hidden metadata
-    string public hiddenMetadataUri;
+    string internal hiddenMetadataUri;
 
     // The URI prefix for the caged owls metadata
-    string public cagedMetadataUri;
+    string internal cagedMetadataUri;
+
+    string internal cagedBackgroundMetadataUri;
 
     // The cost to mint 1 NFT
-    uint256 public cost = 0.07 ether;
+    uint256 public cost = 0 ether;
 
     // The roadmap level
     uint256 public level;
@@ -41,8 +36,14 @@ contract LegendaryOwls is ERC721, Ownable {
     // The maximum supply of Owls
     uint256 public constant maxSupply = 8888;
 
-    // Mapping of Owls to caged/uncaged state
-    mapping(uint256 => bool) uncaged;
+    // Time for the second level of uri change
+    uint256 public timeForSecondChange = 604800;
+
+    // Mapping of Owls to level of uncaged evolution
+    mapping(uint256 => uint256) uncaged;
+
+    // Mapping of Token Id to time to uncage for level 2
+    mapping(uint256 => uint256) uncageTimerTwo;
 
     // Mapping of address to bool that determins wether the address already claimed the whitelist mint
     mapping(address => bool) public whitelistClaimed;
@@ -161,16 +162,16 @@ contract LegendaryOwls is ERC721, Ownable {
         }
     }
 
-    // Function will send 8 ETH to DAO treasury
+    // Function will send 10 ETH to DAO treasury
     // The DAO SC is not yet deployed so the address
     // will be passed as an arg
     function roadMapTwo(address _treasury) public onlyOwnerAndAdmin {
         require(totalSupply() > 3555, "Not yet available");
-        (bool bl, ) = payable(_treasury).call{value: 8 ether}("");
+        (bool bl, ) = payable(_treasury).call{value: 10 ether}("");
         require(bl);
     }
 
-    // Function used to mint 20 NFTs for lucky 20 Holders
+    // Function used to mint 20 NFTs for 20 Holders
     function roadMapThree() public {
         require(totalSupply() > 5332, "Not yet available");
         require(level < 2, "Roadmap step already done");
@@ -183,43 +184,53 @@ contract LegendaryOwls is ERC721, Ownable {
         }
     }
 
-    // 10 ETH will be doanted to a charity
-    // chosen by our community
-    function roadMapFour(address _charity) public onlyOwnerAndAdmin {
+    // 10 ETH will be doanted to Ukraine
+    // You can verify the address by searching
+    // it on Etherscan.io or on any official
+    // Ukrainian website/ news website
+    function roadMapFour() public {
         require(totalSupply() > 7110, "Not yet available");
+        require(level < 3, "Roadmap step already done");
         level++;
-        (bool bl, ) = payable(_charity).call{value: 18 ether}("");
+        (bool bl, ) = payable(0x165CD37b4C644C2921454429E7F9358d18A45e14).call{
+            value: 10 ether
+        }("");
         require(bl);
     }
 
     // Fifth Giveaway is a surprise and will be anounced
     // after the collection is fully minted, stay tuned!
 
-    // Function will send 12 ETH to DAO treasury
-    // The DAO SC is not yet deployed so the address
-    // will be passed as an arg
-    function roadMapSix(address _treasury) public onlyOwnerAndAdmin {
-        require(totalSupply() > 8880, "Not yet available");
-        (bool bl, ) = payable(_treasury).call{value: 12 ether}("");
-        require(bl);
-    }
-
     ///////////////////
     // URI Functions //
     ///////////////////
 
-    // Funtion to be called after uncage timer expires. Will make tokenURI return the uncaged metadata
-    // Pass in the token ID
+    // Funtion to be called after uncage timer expires for each level.
+    // Will make tokenURI return the uncaged metadata. Pass in the token ID
     function uncage(uint256 _tokenId) public {
-        require(
-            block.timestamp > uncageTimer[_tokenId],
-            "You have to wait more to uncage your Owl!"
-        );
-        uncaged[_tokenId] = true;
+        if (uncaged[_tokenId] < 1) {
+            require(
+                block.timestamp > uncageTimer[_tokenId],
+                "You have to wait more to uncage your Owl!"
+            );
+            uncaged[_tokenId] = 1;
+        }
+        uncageTimerTwo[_tokenId] == block.timestamp + timeForSecondChange;
+        if (uncaged[_tokenId] == 1) {
+            require(
+                block.timestamp > uncageTimerTwo[_tokenId],
+                "You have to wait more to uncage your Owl!"
+            );
+            uncaged[_tokenId] == 2;
+        }
     }
 
     // Returns bool true if token ID is uncaged and false if token ID is caged
-    function checkUncaged(uint256 _tokenId) public view returns (bool _caged) {
+    function checkUncaged(uint256 _tokenId)
+        public
+        view
+        returns (uint256 _caged)
+    {
         return uncaged[_tokenId];
     }
 
@@ -240,29 +251,26 @@ contract LegendaryOwls is ERC721, Ownable {
         if (revealed == false) {
             return hiddenMetadataUri;
         }
-        string memory currentBaseURI = _baseURI();
-        if (checkUncaged(_tokenId) == true) {
-            return
-                bytes(currentBaseURI).length > 0
-                    ? string(
-                        abi.encodePacked(
-                            currentBaseURI,
-                            _tokenId.toString(),
-                            uriSuffix
-                        )
+        string memory currentBaseURI = uri(_tokenId);
+        return
+            bytes(currentBaseURI).length > 0
+                ? string(
+                    abi.encodePacked(
+                        currentBaseURI,
+                        _tokenId.toString(),
+                        uriSuffix
                     )
-                    : "";
+                )
+                : "";
+    }
+
+    function uri(uint256 _tokenId) internal view returns (string memory) {
+        if (checkUncaged(_tokenId) == 2) {
+            return uriPrefix;
+        } else if (checkUncaged(_tokenId) == 1) {
+            return cagedMetadataUri;
         } else {
-            return
-                bytes(cagedMetadataUri).length > 0
-                    ? string(
-                        abi.encodePacked(
-                            cagedMetadataUri,
-                            _tokenId.toString(),
-                            uriSuffix
-                        )
-                    )
-                    : "";
+            return cagedBackgroundMetadataUri;
         }
     }
 
@@ -287,6 +295,14 @@ contract LegendaryOwls is ERC721, Ownable {
     // Administrative function
     function setUriPrefix(string memory _uriPrefix) public onlyOwnerAndAdmin {
         uriPrefix = _uriPrefix;
+    }
+
+    // Administrative function
+    function setCagedBackgroundMetadataUri(string memory _newUri)
+        public
+        onlyOwnerAndAdmin
+    {
+        cagedBackgroundMetadataUri = _newUri;
     }
 
     /////////////////////
@@ -333,7 +349,7 @@ contract LegendaryOwls is ERC721, Ownable {
 
     function withdraw() public onlyOwnerAndAdmin {
         (bool hs, ) = payable(admin).call{
-            value: (address(this).balance * 5) / 100
+            value: (address(this).balance * 6) / 100
         }("");
         require(hs);
         (bool os, ) = payable(owner()).call{value: address(this).balance}("");

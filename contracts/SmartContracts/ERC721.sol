@@ -23,6 +23,9 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     // State for transfers
     bool public canTransfer;
 
+    // Time for the first level of uri change
+    uint256 public timeForFirstChange = 259200;
+
     // Token name
     string private _name;
 
@@ -365,7 +368,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
 
         _balances[to] += 1;
         _owners[tokenId] = to;
-        uncageTimer[tokenId] = block.timestamp + 300; //2592000;
+        uncageTimer[tokenId] = block.timestamp + timeForFirstChange;
 
         emit Transfer(address(0), to, tokenId);
 
@@ -429,7 +432,7 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         _balances[from] -= 1;
         _balances[to] += 1;
         _owners[tokenId] = to;
-        uncageTimer[tokenId] = block.timestamp + 300; //2592000;
+        uncageTimer[tokenId] = block.timestamp + timeForFirstChange;
 
         emit Transfer(from, to, tokenId);
 
