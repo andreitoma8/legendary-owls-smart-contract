@@ -28,7 +28,7 @@ contract LegendaryOwls is ERC721, Ownable {
     string internal cagedBackgroundMetadataUri;
 
     // The cost to mint 1 NFT
-    uint256 public cost = 0 ether;
+    uint256 public cost = 0.088 ether;
 
     // The roadmap level
     uint256 public level;

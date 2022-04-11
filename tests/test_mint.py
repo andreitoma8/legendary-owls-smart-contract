@@ -14,7 +14,7 @@ def test_main():
     print("Contract unpaused")
     # Mint
     price = one.getPrice({"from": owner})
-    assert price == 65000000000000000
+    assert price == 88000000000000000
     mint1 = one.mint(1, {"from": accounts[1], "amount": price})
     mint2 = one.mint(2, {"from": accounts[2], "amount": price * 2})
     mint3 = one.mint(3, {"from": accounts[3], "amount": price * 3})
@@ -28,23 +28,11 @@ def test_main():
     # Reveal
     reveal = one.setRevealed(True, {"from": owner})
     reveal.wait(1)
+    one.setUriPrefix("Hidden", {"from": owner})
     token_uri = one.tokenURI(1, {"from": owner})
-    assert token_uri != "ipfs://__CID__/hidden.json"
+    assert token_uri != "Hidden"
     # Withdraw
     balance1 = owner.balance()
     withdraw = one.withdraw({"from": owner})
     withdraw.wait(1)
-    assert owner.balance() > balance1 + 90090000000000000
-    # Set caged uri
-    caged_uri = one.setCagedUri("caged", {"from": owner})
-    # Set uncaged uri
-    uncaged_uri = one.setUriPrefix("uncaged", {"from": owner})
-    # Get caged token uri
-    token_uri1 = one.tokenURI(1, {"from": owner})
-    assert token_uri1 == "caged1.json"
-    # Uncage owl
-    time.sleep(60)
-    uncage = one.uncage(1, {"from": owner})
-    # Get uncaged token uri
-    token_uri2 = one.tokenURI(1, {"from": owner})
-    assert token_uri2 == "uncaged1.json"
+    assert owner.balance() > balance1 + (price * 10) - 10000000000000000
