@@ -214,14 +214,13 @@ contract LegendaryOwls is ERC721, Ownable {
                 "You have to wait more to uncage your Owl!"
             );
             uncaged[_tokenId] = 1;
-        }
-        uncageTimerTwo[_tokenId] == block.timestamp + timeForSecondChange;
-        if (uncaged[_tokenId] == 1) {
+            uncageTimerTwo[_tokenId] == block.timestamp + timeForSecondChange;
+        } else if (uncaged[_tokenId] == 1) {
             require(
                 block.timestamp > uncageTimerTwo[_tokenId],
                 "You have to wait more to uncage your Owl!"
             );
-            uncaged[_tokenId] == 2;
+            uncaged[_tokenId] = 2;
         }
     }
 
