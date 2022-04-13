@@ -118,7 +118,7 @@ contract LegendaryOwls is ERC721, Ownable {
     {
         require(presale, "Presale is not active.");
         require(!whitelistClaimed[msg.sender], "Address has already claimed.");
-        require(_mintAmount < 2);
+        require(_mintAmount <= 2);
         bytes32 leaf = keccak256(abi.encodePacked((msg.sender)));
         require(
             MerkleProof.verify(_merkleProof, merkleRoot, leaf),
