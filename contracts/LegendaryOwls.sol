@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Creator: andreitoma8
+// Creator: Andrei Toma
 pragma solidity ^0.8.0;
 
 import "./SmartContracts/ERC721.sol";
@@ -71,9 +71,9 @@ contract LegendaryOwls is ERC721, Ownable {
     // Modifiers //
     ///////////////
 
-    // Keeps mint limit per tx to 5 and keeps max supply at 8888
+    // Keeps mint limit per tx to 7 and keeps max supply at 8888
     modifier mintCompliance(uint256 _mintAmount) {
-        require(_mintAmount > 0 && _mintAmount <= 5, "Invalid mint amount!");
+        require(_mintAmount > 0 && _mintAmount <= 7, "Invalid mint amount!");
         require(
             supply.current() + _mintAmount <= maxSupply,
             "Max supply exceeded!"
@@ -118,7 +118,6 @@ contract LegendaryOwls is ERC721, Ownable {
     {
         require(presale, "Presale is not active.");
         require(!whitelistClaimed[msg.sender], "Address has already claimed.");
-        require(_mintAmount <= 2);
         bytes32 leaf = keccak256(abi.encodePacked((msg.sender)));
         require(
             MerkleProof.verify(_merkleProof, merkleRoot, leaf),
@@ -231,15 +230,6 @@ contract LegendaryOwls is ERC721, Ownable {
         }
     }
 
-    // Returns uint256 for level of uri evolution
-    function checkUncaged(uint256 _tokenId)
-        public
-        view
-        returns (uint256 _caged)
-    {
-        return uncaged[_tokenId];
-    }
-
     // ERC721 standard tokenURI function.
     // Will return hidden, caged or uncaged URI based on reveal state and uncaged state
     function tokenURI(uint256 _tokenId)
@@ -271,9 +261,9 @@ contract LegendaryOwls is ERC721, Ownable {
     }
 
     function uri(uint256 _tokenId) internal view returns (string memory) {
-        if (checkUncaged(_tokenId) == 2) {
+        if (uncaged[_tokenId] == 2) {
             return uriPrefix;
-        } else if (checkUncaged(_tokenId) == 1) {
+        } else if (uncaged[_tokenId] == 1) {
             return cagedMetadataUri;
         } else {
             return cagedBackgroundMetadataUri;
@@ -320,10 +310,6 @@ contract LegendaryOwls is ERC721, Ownable {
         cost = _price;
     }
 
-    // Returns price of mint per NFT
-    function getPrice() public view returns (uint256) {
-        return cost;
-    }
 
     /////////////////////
     // State functions //
@@ -342,11 +328,6 @@ contract LegendaryOwls is ERC721, Ownable {
     // Administrative function
     function setRevealed(bool _state) public onlyOwnerAndAdmin {
         revealed = _state;
-    }
-
-    // Administrative function
-    function setCanTransfer(bool _state) public onlyOwnerAndAdmin {
-        canTransfer = _state;
     }
 
     ///////////////////////

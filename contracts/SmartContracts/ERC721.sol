@@ -20,8 +20,6 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
     using Address for address;
     using Strings for uint256;
 
-    // State for transfers
-    bool public canTransfer;
 
     // Time for the first level of uri change
     uint256 public timeForFirstChange = 259200;
@@ -417,7 +415,6 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
         address to,
         uint256 tokenId
     ) internal virtual {
-        require(canTransfer, "Token transfers are not enabled.");
         require(
             ERC721.ownerOf(tokenId) == from,
             "ERC721: transfer from incorrect owner"
