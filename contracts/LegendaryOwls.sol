@@ -2,22 +2,16 @@
 // Creator: Andrei Toma
 pragma solidity ^0.8.0;
 
-import "./SmartContracts/ERC721.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "./SmartContracts/ERC721A.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
-contract LegendaryOwls is ERC721, Ownable {
+contract LegendaryOwls is ERC721A, Ownable {
     using Strings for uint256;
-    using Counters for Counters.Counter;
-
-    Counters.Counter private supply;
 
     // The URI prefix for the main metadata
     string internal uriPrefix;
-
-    // Metadata file extension
-    string internal constant uriSuffix = ".json";
 
     // The URI prefix for the hidden metadata
     string internal hiddenMetadataUri;
@@ -36,11 +30,7 @@ contract LegendaryOwls is ERC721, Ownable {
     // The maximum supply of Owls
     uint256 public constant maxSupply = 8888;
 
-    // Time for the second level of uri change
-    uint256 internal timeForSecondChange = 604800;
-
-    // Mapping of Owls to level of uncaged evolution
-    mapping(uint256 => uint256) internal uncaged;
+    uint256 public revealTime;
 
     // Mapping of Token Id to time to uncage for level 2
     mapping(uint256 => uint256) internal uncageTimerTwo;
@@ -63,7 +53,7 @@ contract LegendaryOwls is ERC721, Ownable {
     // Revealed state
     bool public revealed = false;
 
-    constructor() ERC721("Legendary Owls", "OWLS") {
+    constructor() ERC721A("Legendary Owls", "OWLS") {
         admin = msg.sender;
     }
 
@@ -73,9 +63,9 @@ contract LegendaryOwls is ERC721, Ownable {
 
     // Keeps mint limit per tx to 7 and keeps max supply at 8888
     modifier mintCompliance(uint256 _mintAmount) {
-        require(_mintAmount > 0 && _mintAmount <= 7, "Invalid mint amount!");
+        require(_mintAmount > 0 && _mintAmount <= 10, "Invalid mint amount!");
         require(
-            supply.current() + _mintAmount <= maxSupply,
+            totalSupply() + _mintAmount <= maxSupply,
             "Max supply exceeded!"
         );
         _;
@@ -104,7 +94,7 @@ contract LegendaryOwls is ERC721, Ownable {
         require(!paused, "The contract is paused!");
         require(msg.value >= cost * _mintAmount, "Insufficient funds!");
 
-        _mintLoop(msg.sender, _mintAmount);
+        _safeMint(msg.sender, _mintAmount);
     }
 
     // The whitelist mint function
@@ -124,7 +114,7 @@ contract LegendaryOwls is ERC721, Ownable {
             "Invalid proof"
         );
         whitelistClaimed[msg.sender] = true;
-        _mintLoop(msg.sender, _mintAmount);
+        _safeMint(msg.sender, _mintAmount);
     }
 
     // Function that allows the team to mint for other addresses for free
@@ -134,7 +124,7 @@ contract LegendaryOwls is ERC721, Ownable {
         mintCompliance(_mintAmount)
         onlyOwnerAndAdmin
     {
-        _mintLoop(_receiver, _mintAmount);
+        _safeMint(_receiver, _mintAmount);
     }
 
     ///////////////
@@ -179,7 +169,7 @@ contract LegendaryOwls is ERC721, Ownable {
         for (uint256 i = 1; i <= 20; i++) {
             uint256 tokenOfWinner = ((block.timestamp / i) % length) + 1;
             address winner = ownerOf(tokenOfWinner);
-            _mintLoop(winner, 1);
+            _safeMint(winner, 1);
         }
     }
 
@@ -211,25 +201,6 @@ contract LegendaryOwls is ERC721, Ownable {
     // URI Functions //
     ///////////////////
 
-    // Funtion to be called after uncage timer expires for each level.
-    // Will make tokenURI return the uncaged metadata. Pass in the token ID
-    function uncage(uint256 _tokenId) public {
-        if (uncaged[_tokenId] < 1) {
-            require(
-                block.timestamp > uncageTimer[_tokenId],
-                "You have to wait more to uncage your Owl!"
-            );
-            uncaged[_tokenId] = 1;
-            uncageTimerTwo[_tokenId] == block.timestamp + timeForSecondChange;
-        } else if (uncaged[_tokenId] == 1) {
-            require(
-                block.timestamp > uncageTimerTwo[_tokenId],
-                "You have to wait more to uncage your Owl!"
-            );
-            uncaged[_tokenId] = 2;
-        }
-    }
-
     // ERC721 standard tokenURI function.
     // Will return hidden, caged or uncaged URI based on reveal state and uncaged state
     function tokenURI(uint256 _tokenId)
@@ -247,27 +218,17 @@ contract LegendaryOwls is ERC721, Ownable {
         if (revealed == false) {
             return hiddenMetadataUri;
         }
-        string memory currentBaseURI = uri(_tokenId);
+        string memory currentBaseURI = _baseURI();
         return
             bytes(currentBaseURI).length > 0
                 ? string(
                     abi.encodePacked(
                         currentBaseURI,
                         _tokenId.toString(),
-                        uriSuffix
+                        ".json"
                     )
                 )
                 : "";
-    }
-
-    function uri(uint256 _tokenId) internal view returns (string memory) {
-        if (uncaged[_tokenId] == 2) {
-            return uriPrefix;
-        } else if (uncaged[_tokenId] == 1) {
-            return cagedMetadataUri;
-        } else {
-            return cagedBackgroundMetadataUri;
-        }
     }
 
     // Administrative function
@@ -285,7 +246,13 @@ contract LegendaryOwls is ERC721, Ownable {
 
     // Override for ERC721 Smart Contract
     function _baseURI() internal view virtual override returns (string memory) {
-        return uriPrefix;
+        if (revealTime + 345600 >= block.timestamp) {
+            return uriPrefix;
+        } else if (revealTime + 172800 >= block.timestamp) {
+            return cagedMetadataUri;
+        } else {
+            return cagedBackgroundMetadataUri;
+        }
     }
 
     // Administrative function
@@ -310,7 +277,6 @@ contract LegendaryOwls is ERC721, Ownable {
         cost = _price;
     }
 
-
     /////////////////////
     // State functions //
     /////////////////////
@@ -328,6 +294,7 @@ contract LegendaryOwls is ERC721, Ownable {
     // Administrative function
     function setRevealed(bool _state) public onlyOwnerAndAdmin {
         revealed = _state;
+        revealTime = block.timestamp;
     }
 
     ///////////////////////
@@ -347,22 +314,9 @@ contract LegendaryOwls is ERC721, Ownable {
     // Utils //
     ///////////
 
-    // Returns total supply
-    function totalSupply() public view returns (uint256) {
-        return supply.current();
-    }
-
     // Administrative function
     function setMerkleRoot(bytes32 _newMerkleRoot) public onlyOwnerAndAdmin {
         merkleRoot = _newMerkleRoot;
-    }
-
-    // Loop for minting multiple NFTs in one transaction
-    function _mintLoop(address _receiver, uint256 _mintAmount) internal {
-        for (uint256 i = 0; i < _mintAmount; i++) {
-            supply.increment();
-            _safeMint(_receiver, supply.current());
-        }
     }
 
     // Returns an array of tokens of _owner address
