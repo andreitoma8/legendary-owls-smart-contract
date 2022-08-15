@@ -32,8 +32,11 @@ contract LegendaryOwls is ERC721A, Ownable {
 
     uint256 public revealTime;
 
-    // Mapping of Token Id to time to uncage for level 2
-    mapping(uint256 => uint256) internal uncageTimerTwo;
+    // Mapping of Token Id to timer for URI change
+    mapping(uint256 => uint256) internal uriTimer;
+
+    // Mapping of Token Id to URI Level
+    mapping(uint256 => uint256) internal tokenIdToLevel;
 
     // Mapping of address to bool that determins wether the address already claimed the whitelist mint
     mapping(address => bool) public whitelistClaimed;
@@ -93,7 +96,7 @@ contract LegendaryOwls is ERC721A, Ownable {
     {
         require(!paused, "The contract is paused!");
         require(msg.value >= cost * _mintAmount, "Insufficient funds!");
-
+        uriTimer[_currentIndex] = block.timestamp;
         _safeMint(msg.sender, _mintAmount);
     }
 
@@ -114,6 +117,7 @@ contract LegendaryOwls is ERC721A, Ownable {
             "Invalid proof"
         );
         whitelistClaimed[msg.sender] = true;
+        uriTimer[_currentIndex] = block.timestamp;
         _safeMint(msg.sender, _mintAmount);
     }
 
@@ -124,6 +128,7 @@ contract LegendaryOwls is ERC721A, Ownable {
         mintCompliance(_mintAmount)
         onlyOwnerAndAdmin
     {
+        uriTimer[_currentIndex] = block.timestamp;
         _safeMint(_receiver, _mintAmount);
     }
 
@@ -169,6 +174,7 @@ contract LegendaryOwls is ERC721A, Ownable {
         for (uint256 i = 1; i <= 20; i++) {
             uint256 tokenOfWinner = ((block.timestamp / i) % length) + 1;
             address winner = ownerOf(tokenOfWinner);
+            uriTimer[_currentIndex] = block.timestamp;
             _safeMint(winner, 1);
         }
     }
@@ -218,7 +224,7 @@ contract LegendaryOwls is ERC721A, Ownable {
         if (revealed == false) {
             return hiddenMetadataUri;
         }
-        string memory currentBaseURI = _baseURI();
+        string memory currentBaseURI = _baseURI(_tokenId);
         return
             bytes(currentBaseURI).length > 0
                 ? string(
@@ -245,10 +251,26 @@ contract LegendaryOwls is ERC721A, Ownable {
     }
 
     // Override for ERC721 Smart Contract
-    function _baseURI() internal view virtual override returns (string memory) {
-        if (revealTime + 345600 >= block.timestamp) {
+    function _baseURI(uint256 _tokenId)
+        internal
+        view
+        virtual
+        returns (string memory)
+    {
+        if (
+            uriTimer[_tokenId] + (172800 * 2) >= block.timestamp ||
+            tokenIdToLevel[_tokenId] == 2
+        ) {
             return uriPrefix;
-        } else if (revealTime + 172800 >= block.timestamp) {
+        } else if (
+            tokenIdToLevel[_tokenId] == 1 &&
+            uriTimer[_tokenId] + 172800 >= block.timestamp
+        ) {
+            return uriPrefix;
+        } else if (
+            uriTimer[_tokenId] + 172800 >= block.timestamp ||
+            tokenIdToLevel[_tokenId] == 1
+        ) {
             return cagedMetadataUri;
         } else {
             return cagedBackgroundMetadataUri;
@@ -297,6 +319,18 @@ contract LegendaryOwls is ERC721A, Ownable {
         revealTime = block.timestamp;
     }
 
+    // Administrative function
+    function reveal(
+        string memory _uriPrefix,
+        string memory _cagedMetadataUri,
+        string memory _cagedBackgroundMetadataUri
+    ) external onlyOwnerAndAdmin {
+        revealed = true;
+        uriPrefix = _uriPrefix;
+        cagedMetadataUri = _cagedMetadataUri;
+        cagedBackgroundMetadataUri = _cagedBackgroundMetadataUri;
+    }
+
     ///////////////////////
     // Withdraw function //
     ///////////////////////
@@ -313,6 +347,16 @@ contract LegendaryOwls is ERC721A, Ownable {
     ///////////
     // Utils //
     ///////////
+
+    function getSaleState() external view returns (uint256) {
+        if (!paused) {
+            return 2;
+        } else if (presale) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
 
     // Administrative function
     function setMerkleRoot(bytes32 _newMerkleRoot) public onlyOwnerAndAdmin {
@@ -344,6 +388,24 @@ contract LegendaryOwls is ERC721A, Ownable {
     }
 
     receive() external payable {}
+
+    // Overrides
+
+    function _beforeTokenTransfers(
+        address from,
+        address to,
+        uint256 startTokenId,
+        uint256 quantity
+    ) internal virtual override {
+        if (uriTimer[startTokenId] + (172800 * 2) >= block.timestamp) {
+            tokenIdToLevel[startTokenId] = 2;
+        } else if (uriTimer[startTokenId] + 172800 >= block.timestamp) {
+            tokenIdToLevel[startTokenId] = 1;
+            uriTimer[startTokenId] = block.timestamp;
+        } else {
+            uriTimer[startTokenId] = block.timestamp;
+        }
+    }
 
     // If you got this far you are a hardcore geek! :)
 }

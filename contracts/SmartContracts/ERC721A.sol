@@ -95,7 +95,7 @@ contract ERC721A is IERC721A {
     // =============================================================
 
     // The next token ID to be minted.
-    uint256 private _currentIndex;
+    uint256 internal _currentIndex;
 
     // The number of tokens burned.
     uint256 private _burnCounter;
