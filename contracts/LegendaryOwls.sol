@@ -258,23 +258,24 @@ contract LegendaryOwls is ERC721A, Ownable {
         returns (string memory)
     {
         if (
-            uriTimer[_tokenId] + (172800 * 2) >= block.timestamp ||
+            block.timestamp > uriTimer[_tokenId] + (172800 * 2) ||
             tokenIdToLevel[_tokenId] == 2
         ) {
             return uriPrefix;
-        } else if (
+        }
+        if (
             tokenIdToLevel[_tokenId] == 1 &&
-            uriTimer[_tokenId] + 172800 >= block.timestamp
+            block.timestamp > uriTimer[_tokenId] + 172800
         ) {
             return uriPrefix;
-        } else if (
-            uriTimer[_tokenId] + 172800 >= block.timestamp ||
+        }
+        if (
+            block.timestamp > uriTimer[_tokenId] + 172800 ||
             tokenIdToLevel[_tokenId] == 1
         ) {
             return cagedMetadataUri;
-        } else {
-            return cagedBackgroundMetadataUri;
         }
+        return cagedBackgroundMetadataUri;
     }
 
     // Administrative function
@@ -397,9 +398,17 @@ contract LegendaryOwls is ERC721A, Ownable {
         uint256 startTokenId,
         uint256 quantity
     ) internal virtual override {
-        if (uriTimer[startTokenId] + (172800 * 2) >= block.timestamp) {
+        if (
+            block.timestamp > uriTimer[startTokenId] + (172800 * 2) ||
+            tokenIdToLevel[startTokenId] == 2
+        ) {
             tokenIdToLevel[startTokenId] = 2;
-        } else if (uriTimer[startTokenId] + 172800 >= block.timestamp) {
+        } else if (
+            tokenIdToLevel[startTokenId] == 1 &&
+            block.timestamp > uriTimer[startTokenId] + 172800
+        ) {
+            tokenIdToLevel[startTokenId] = 2;
+        } else if (block.timestamp > uriTimer[startTokenId] + 172800) {
             tokenIdToLevel[startTokenId] = 1;
             uriTimer[startTokenId] = block.timestamp;
         } else {

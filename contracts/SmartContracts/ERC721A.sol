@@ -833,8 +833,6 @@ contract ERC721A is IERC721A {
         uint256 startTokenId = _currentIndex;
         if (quantity == 0) revert MintZeroQuantity();
 
-        _beforeTokenTransfers(address(0), to, startTokenId, quantity);
-
         // Overflows are incredibly unrealistic.
         // `balance` and `numberMinted` have a maximum limit of 2**64.
         // `tokenId` has a maximum limit of 2**256.
