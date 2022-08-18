@@ -24,6 +24,9 @@ contract LegendaryOwls is ERC721A, Ownable {
     // The cost to mint 1 NFT
     uint256 public cost = 0.088 ether;
 
+    // The cost to mint 1 NFT in PreSale
+    uint256 public costPresale = 0.07 ether;
+
     // The roadmap level
     uint256 public level;
 
@@ -66,7 +69,7 @@ contract LegendaryOwls is ERC721A, Ownable {
 
     // Keeps mint limit per tx to 7 and keeps max supply at 8888
     modifier mintCompliance(uint256 _mintAmount) {
-        require(_mintAmount > 0 && _mintAmount <= 10, "Invalid mint amount!");
+        require(_mintAmount > 0 && _mintAmount <= 7, "Invalid mint amount!");
         require(
             totalSupply() + _mintAmount <= maxSupply,
             "Max supply exceeded!"
@@ -110,6 +113,7 @@ contract LegendaryOwls is ERC721A, Ownable {
         mintCompliance(_mintAmount)
     {
         require(presale, "Presale is not active.");
+        require(msg.value >= costPresale * _mintAmount, "Insufficient funds!");
         require(!whitelistClaimed[msg.sender], "Address has already claimed.");
         bytes32 leaf = keccak256(abi.encodePacked((msg.sender)));
         require(
@@ -258,19 +262,19 @@ contract LegendaryOwls is ERC721A, Ownable {
         returns (string memory)
     {
         if (
-            block.timestamp > uriTimer[_tokenId] + (172800 * 2) ||
+            block.timestamp > uriTimer[_tokenId] + (900 * 2) ||
             tokenIdToLevel[_tokenId] == 2
         ) {
             return uriPrefix;
         }
         if (
             tokenIdToLevel[_tokenId] == 1 &&
-            block.timestamp > uriTimer[_tokenId] + 172800
+            block.timestamp > uriTimer[_tokenId] + 900
         ) {
             return uriPrefix;
         }
         if (
-            block.timestamp > uriTimer[_tokenId] + 172800 ||
+            block.timestamp > uriTimer[_tokenId] + 900 ||
             tokenIdToLevel[_tokenId] == 1
         ) {
             return cagedMetadataUri;
@@ -399,16 +403,16 @@ contract LegendaryOwls is ERC721A, Ownable {
         uint256 quantity
     ) internal virtual override {
         if (
-            block.timestamp > uriTimer[startTokenId] + (172800 * 2) ||
+            block.timestamp > uriTimer[startTokenId] + (900 * 2) ||
             tokenIdToLevel[startTokenId] == 2
         ) {
             tokenIdToLevel[startTokenId] = 2;
         } else if (
             tokenIdToLevel[startTokenId] == 1 &&
-            block.timestamp > uriTimer[startTokenId] + 172800
+            block.timestamp > uriTimer[startTokenId] + 900
         ) {
             tokenIdToLevel[startTokenId] = 2;
-        } else if (block.timestamp > uriTimer[startTokenId] + 172800) {
+        } else if (block.timestamp > uriTimer[startTokenId] + 900) {
             tokenIdToLevel[startTokenId] = 1;
             uriTimer[startTokenId] = block.timestamp;
         } else {
