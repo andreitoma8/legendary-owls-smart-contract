@@ -33,7 +33,8 @@ contract LegendaryOwls is ERC721A, Ownable {
     // The maximum supply of Owls
     uint256 public constant maxSupply = 8888;
 
-    uint256 public revealTime;
+    // The amount of NFTs reserved for OG, Giveaway and Vault
+    uint256 public projectAllocation = 500;
 
     // Mapping of Token Id to timer for URI change
     mapping(uint256 => uint256) internal uriTimer;
@@ -43,6 +44,14 @@ contract LegendaryOwls is ERC721A, Ownable {
 
     // Mapping of address to bool that determins wether the address already claimed the whitelist mint
     mapping(address => bool) public whitelistClaimed;
+
+    // Owners
+    address[] owners = [
+        "0xA4Ad17ef801Fa4bD44b758E5Ae8B2169f59B666F",
+        "0xA4Ad17ef801Fa4bD44b758E5Ae8B2169f59B666F",
+        "0xA4Ad17ef801Fa4bD44b758E5Ae8B2169f59B666F",
+        "0xA4Ad17ef801Fa4bD44b758E5Ae8B2169f59B666F"
+    ];
 
     // The Merkle Root
     bytes32 internal merkleRoot;
@@ -71,7 +80,7 @@ contract LegendaryOwls is ERC721A, Ownable {
     modifier mintCompliance(uint256 _mintAmount) {
         require(_mintAmount > 0 && _mintAmount <= 7, "Invalid mint amount!");
         require(
-            totalSupply() + _mintAmount <= maxSupply,
+            totalSupply() + _mintAmount <= maxSupply - projectAllocation,
             "Max supply exceeded!"
         );
         _;
@@ -92,11 +101,12 @@ contract LegendaryOwls is ERC721A, Ownable {
 
     // The main mint function
     // _mintAmount = How many NFTs to mint in the tx
-    function mint(uint256 _mintAmount)
-        public
-        payable
-        mintCompliance(_mintAmount)
-    {
+    function mint(uint256 _mintAmount) public payable {
+        require(_mintAmount > 0 && _mintAmount <= 7, "Invalid mint amount!");
+        require(
+            totalSupply() + _mintAmount <= maxSupply - projectAllocation,
+            "Max supply exceeded!"
+        );
         require(!paused, "The contract is paused!");
         require(msg.value >= cost * _mintAmount, "Insufficient funds!");
         for (uint256 i; i < _mintAmount; ++i) {
@@ -112,8 +122,12 @@ contract LegendaryOwls is ERC721A, Ownable {
     function whitelistMint(uint256 _mintAmount, bytes32[] calldata _merkleProof)
         public
         payable
-        mintCompliance(_mintAmount)
     {
+        require(_mintAmount > 0 && _mintAmount <= 7, "Invalid mint amount!");
+        require(
+            totalSupply() + _mintAmount <= maxSupply - projectAllocation,
+            "Max supply exceeded!"
+        );
         require(presale, "Presale is not active.");
         require(msg.value >= costPresale * _mintAmount, "Insufficient funds!");
         require(!whitelistClaimed[msg.sender], "Address has already claimed.");
@@ -133,9 +147,14 @@ contract LegendaryOwls is ERC721A, Ownable {
     // Will be used for giveaways
     function mintForAddress(uint256 _mintAmount, address _receiver)
         public
-        mintCompliance(_mintAmount)
         onlyOwnerAndAdmin
     {
+        require(
+            totalSupply() + _mintAmount <= maxSupply &&
+                projectAllocation - _mintAmount > 0,
+            "Max supply exceeded!"
+        );
+        projectAllocation -= _mintAmount;
         for (uint256 i; i < _mintAmount; ++i) {
             uriTimer[_currentIndex + i] = block.timestamp;
         }
@@ -327,7 +346,6 @@ contract LegendaryOwls is ERC721A, Ownable {
     // Administrative function
     function setRevealed(bool _state) public onlyOwnerAndAdmin {
         revealed = _state;
-        revealTime = block.timestamp;
     }
 
     // Administrative function
@@ -350,8 +368,12 @@ contract LegendaryOwls is ERC721A, Ownable {
         uint256 devTax = (amount * 6) / 100;
         (bool hs, ) = payable(admin).call{value: devTax}("");
         require(hs);
-        (bool os, ) = payable(owner()).call{value: amount - devTax}("");
-        require(os);
+        for (uint256 i; i < owners.length; i++) {
+            (bool sc, ) = payable(owners[i]).call{
+                value: (amount - devTax) / owners.length
+            }("");
+            require(sc);
+        }
     }
 
     ///////////
