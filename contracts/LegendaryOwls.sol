@@ -99,7 +99,9 @@ contract LegendaryOwls is ERC721A, Ownable {
     {
         require(!paused, "The contract is paused!");
         require(msg.value >= cost * _mintAmount, "Insufficient funds!");
-        uriTimer[_currentIndex] = block.timestamp;
+        for (uint256 i; i < _mintAmount; ++i) {
+            uriTimer[_currentIndex + i] = block.timestamp;
+        }
         _safeMint(msg.sender, _mintAmount);
     }
 
@@ -121,7 +123,9 @@ contract LegendaryOwls is ERC721A, Ownable {
             "Invalid proof"
         );
         whitelistClaimed[msg.sender] = true;
-        uriTimer[_currentIndex] = block.timestamp;
+        for (uint256 i; i < _mintAmount; ++i) {
+            uriTimer[_currentIndex + i] = block.timestamp;
+        }
         _safeMint(msg.sender, _mintAmount);
     }
 
@@ -132,7 +136,9 @@ contract LegendaryOwls is ERC721A, Ownable {
         mintCompliance(_mintAmount)
         onlyOwnerAndAdmin
     {
-        uriTimer[_currentIndex] = block.timestamp;
+        for (uint256 i; i < _mintAmount; ++i) {
+            uriTimer[_currentIndex + i] = block.timestamp;
+        }
         _safeMint(_receiver, _mintAmount);
     }
 
@@ -262,19 +268,19 @@ contract LegendaryOwls is ERC721A, Ownable {
         returns (string memory)
     {
         if (
-            block.timestamp > uriTimer[_tokenId] + (900 * 2) ||
+            block.timestamp > uriTimer[_tokenId] + (172800 * 2) ||
             tokenIdToLevel[_tokenId] == 2
         ) {
             return uriPrefix;
         }
         if (
             tokenIdToLevel[_tokenId] == 1 &&
-            block.timestamp > uriTimer[_tokenId] + 900
+            block.timestamp > uriTimer[_tokenId] + 172800
         ) {
             return uriPrefix;
         }
         if (
-            block.timestamp > uriTimer[_tokenId] + 900 ||
+            block.timestamp > uriTimer[_tokenId] + 172800 ||
             tokenIdToLevel[_tokenId] == 1
         ) {
             return cagedMetadataUri;
@@ -340,12 +346,11 @@ contract LegendaryOwls is ERC721A, Ownable {
     // Withdraw function //
     ///////////////////////
 
-    function withdraw() public onlyOwnerAndAdmin {
-        (bool hs, ) = payable(admin).call{
-            value: (address(this).balance * 6) / 100
-        }("");
+    function withdraw(uint256 amount) public onlyOwnerAndAdmin {
+        uint256 devTax = (amount * 6) / 100;
+        (bool hs, ) = payable(admin).call{value: devTax}("");
         require(hs);
-        (bool os, ) = payable(owner()).call{value: address(this).balance}("");
+        (bool os, ) = payable(owner()).call{value: amount - devTax}("");
         require(os);
     }
 
@@ -403,16 +408,16 @@ contract LegendaryOwls is ERC721A, Ownable {
         uint256 quantity
     ) internal virtual override {
         if (
-            block.timestamp > uriTimer[startTokenId] + (900 * 2) ||
+            block.timestamp > uriTimer[startTokenId] + (172800 * 2) ||
             tokenIdToLevel[startTokenId] == 2
         ) {
             tokenIdToLevel[startTokenId] = 2;
         } else if (
             tokenIdToLevel[startTokenId] == 1 &&
-            block.timestamp > uriTimer[startTokenId] + 900
+            block.timestamp > uriTimer[startTokenId] + 172800
         ) {
             tokenIdToLevel[startTokenId] = 2;
-        } else if (block.timestamp > uriTimer[startTokenId] + 900) {
+        } else if (block.timestamp > uriTimer[startTokenId] + 172800) {
             tokenIdToLevel[startTokenId] = 1;
             uriTimer[startTokenId] = block.timestamp;
         } else {
