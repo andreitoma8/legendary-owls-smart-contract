@@ -14,18 +14,20 @@ contract LegendaryOwls is ERC721A, Ownable {
     string internal uriPrefix;
 
     // The URI prefix for the hidden metadata
-    string internal hiddenMetadataUri;
+    string internal hiddenMetadataUri =
+        "ipfs://QmfTG77mvtKmUgUmxXnPWvoZXKYH9AfnK1NnCYLfGiqZyW";
 
-    // The URI prefix for the caged owls metadata
-    string internal cagedMetadataUri;
+    // The URI prefix for Owls with Prison Background
+    string internal backgroundMetadataUri;
 
+    // The URI prefix for Owls with Cage and Prison Background
     string internal cagedBackgroundMetadataUri;
 
     // The cost to mint 1 NFT
     uint256 public cost = 0.088 ether;
 
     // The cost to mint 1 NFT in PreSale
-    uint256 public costPresale = 0.07 ether;
+    uint256 public whitelistCost = 0.07 ether;
 
     // The roadmap level
     uint256 public level;
@@ -46,12 +48,7 @@ contract LegendaryOwls is ERC721A, Ownable {
     mapping(address => bool) public whitelistClaimed;
 
     // Owners
-    address[] owners = [
-        "0xA4Ad17ef801Fa4bD44b758E5Ae8B2169f59B666F",
-        "0xA4Ad17ef801Fa4bD44b758E5Ae8B2169f59B666F",
-        "0xA4Ad17ef801Fa4bD44b758E5Ae8B2169f59B666F",
-        "0xA4Ad17ef801Fa4bD44b758E5Ae8B2169f59B666F"
-    ];
+    address[] owners;
 
     // The Merkle Root
     bytes32 internal merkleRoot;
@@ -68,8 +65,9 @@ contract LegendaryOwls is ERC721A, Ownable {
     // Revealed state
     bool public revealed = false;
 
-    constructor() ERC721A("Legendary Owls", "OWLS") {
+    constructor(address[] memory _owners) ERC721A("Legendary Owls", "LO") {
         admin = msg.sender;
+        owners = _owners;
     }
 
     ///////////////
@@ -78,6 +76,7 @@ contract LegendaryOwls is ERC721A, Ownable {
 
     // Keeps mint limit per tx to 7 and keeps max supply at 8888
     modifier mintCompliance(uint256 _mintAmount) {
+        require(!paused, "The contract is paused!");
         require(_mintAmount > 0 && _mintAmount <= 7, "Invalid mint amount!");
         require(
             totalSupply() + _mintAmount <= maxSupply - projectAllocation,
@@ -102,12 +101,10 @@ contract LegendaryOwls is ERC721A, Ownable {
     // The main mint function
     // _mintAmount = How many NFTs to mint in the tx
     function mint(uint256 _mintAmount) public payable {
-        require(_mintAmount > 0 && _mintAmount <= 7, "Invalid mint amount!");
         require(
             totalSupply() + _mintAmount <= maxSupply - projectAllocation,
             "Max supply exceeded!"
         );
-        require(!paused, "The contract is paused!");
         require(msg.value >= cost * _mintAmount, "Insufficient funds!");
         for (uint256 i; i < _mintAmount; ++i) {
             uriTimer[_currentIndex + i] = block.timestamp;
@@ -123,13 +120,14 @@ contract LegendaryOwls is ERC721A, Ownable {
         public
         payable
     {
-        require(_mintAmount > 0 && _mintAmount <= 7, "Invalid mint amount!");
         require(
             totalSupply() + _mintAmount <= maxSupply - projectAllocation,
             "Max supply exceeded!"
         );
-        require(presale, "Presale is not active.");
-        require(msg.value >= costPresale * _mintAmount, "Insufficient funds!");
+        require(
+            msg.value >= whitelistCost * _mintAmount,
+            "Insufficient funds!"
+        );
         require(!whitelistClaimed[msg.sender], "Address has already claimed.");
         bytes32 leaf = keccak256(abi.encodePacked((msg.sender)));
         require(
@@ -274,11 +272,6 @@ contract LegendaryOwls is ERC721A, Ownable {
         hiddenMetadataUri = _hiddenMetadataUri;
     }
 
-    // Administrative function
-    function setCagedUri(string memory _cagedURI) public onlyOwnerAndAdmin {
-        cagedMetadataUri = _cagedURI;
-    }
-
     // Override for ERC721 Smart Contract
     function _baseURI(uint256 _tokenId)
         internal
@@ -302,41 +295,14 @@ contract LegendaryOwls is ERC721A, Ownable {
             block.timestamp > uriTimer[_tokenId] + 172800 ||
             tokenIdToLevel[_tokenId] == 1
         ) {
-            return cagedMetadataUri;
+            return backgroundMetadataUri;
         }
         return cagedBackgroundMetadataUri;
-    }
-
-    // Administrative function
-    function setUriPrefix(string memory _uriPrefix) public onlyOwnerAndAdmin {
-        uriPrefix = _uriPrefix;
-    }
-
-    // Administrative function
-    function setCagedBackgroundMetadataUri(string memory _newUri)
-        public
-        onlyOwnerAndAdmin
-    {
-        cagedBackgroundMetadataUri = _newUri;
-    }
-
-    /////////////////////
-    // Price functions //
-    /////////////////////
-
-    // Administrative function
-    function setPrice(uint256 _price) public onlyOwnerAndAdmin {
-        cost = _price;
     }
 
     /////////////////////
     // State functions //
     /////////////////////
-
-    // Administrative function
-    function setPresale(bool _bool) public onlyOwnerAndAdmin {
-        presale = _bool;
-    }
 
     // Administrative function
     function setPaused(bool _state) public onlyOwnerAndAdmin {
@@ -351,12 +317,12 @@ contract LegendaryOwls is ERC721A, Ownable {
     // Administrative function
     function reveal(
         string memory _uriPrefix,
-        string memory _cagedMetadataUri,
+        string memory _backgroundMetadataUri,
         string memory _cagedBackgroundMetadataUri
     ) external onlyOwnerAndAdmin {
         revealed = true;
         uriPrefix = _uriPrefix;
-        cagedMetadataUri = _cagedMetadataUri;
+        backgroundMetadataUri = _backgroundMetadataUri;
         cagedBackgroundMetadataUri = _cagedBackgroundMetadataUri;
     }
 
@@ -380,14 +346,8 @@ contract LegendaryOwls is ERC721A, Ownable {
     // Utils //
     ///////////
 
-    function getSaleState() external view returns (uint256) {
-        if (!paused) {
-            return 2;
-        } else if (presale) {
-            return 1;
-        } else {
-            return 0;
-        }
+    function getSaleState() external view returns (bool) {
+        return paused;
     }
 
     // Administrative function
