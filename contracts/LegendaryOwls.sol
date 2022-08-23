@@ -169,7 +169,6 @@ contract LegendaryOwls is ERC721A, Ownable {
     // and get the tx that will start the giveaways? :)
 
     // Function used to giveaway 1 ETH to 5 NFT Owners
-    // Will be called 5 times by Owner/Admin
     function roadMapOne() public {
         require(totalSupply() > 1777, "Not yet available");
         require(level < 1, "Roadmap step already done");
@@ -346,6 +345,12 @@ contract LegendaryOwls is ERC721A, Ownable {
     // Utils //
     ///////////
 
+    // Returns bool true if address has used the whitelist/og spot
+    function getWhitelistState(address _address) external view returns (bool) {
+        return whitelistClaimed[_address];
+    }
+
+    // Returns the Sale State
     function getSaleState() external view returns (bool) {
         return paused;
     }
