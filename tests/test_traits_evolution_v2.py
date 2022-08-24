@@ -14,18 +14,14 @@ def test_main():
     # Deploy
     owner = accounts[0]
     user = accounts[1]
-    one = LegendaryOwls.deploy({"from": owner})
+    one = LegendaryOwls.deploy([], {"from": owner})
     one.setPaused(False, {"from": owner})
     # Mint
     one.setPrice(0, {"from": owner})
     one.mint(1, {"from": user})
-    one.setCagedUri(CAGED_URI, {"from": owner})
-    one.setUriPrefix(URI_PREFIX, {"from": owner})
     one.setHiddenMetadataUri(HIDDEN_URI, {"from": owner})
-    one.setCagedBackgroundMetadataUri(
-        CAGED_AND_PRISON_BACKGROUND_URI, {"from": owner})
-    assert one.tokenURI(1, {"from": owner}) == HIDDEN_URI
-    one.setRevealed(True, {"from": owner})
+    one.reveal(URI_PREFIX, CAGED_URI,
+               CAGED_AND_PRISON_BACKGROUND_URI,  {"from": owner})
     assert (
         one.tokenURI(1, {"from": owner}
                      ) == CAGED_AND_PRISON_BACKGROUND_URI + URI_SUFIX

@@ -1,5 +1,5 @@
 from brownie import LegendaryOwls, accounts
-import time
+import brownie
 
 # Test made with a 60s wait time to uncage the owl
 
@@ -13,8 +13,7 @@ def test_main():
     unpause = one.setPaused(False, {"from": owner})
     print("Contract unpaused")
     # Mint
-    price = one.getPrice({"from": owner})
-    assert price == 88000000000000000
+    price = 88000000000000000
     mint1 = one.mint(1, {"from": accounts[1], "amount": price})
     mint2 = one.mint(2, {"from": accounts[2], "amount": price * 2})
     mint3 = one.mint(3, {"from": accounts[3], "amount": price * 3})
