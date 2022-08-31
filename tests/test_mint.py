@@ -7,7 +7,7 @@ import brownie
 def test_main():
     # Deploy
     owner = accounts[0]
-    one = LegendaryOwls.deploy({"from": owner})
+    one = LegendaryOwls.deploy([], {"from": owner})
     print("Contract deployed!")
     # Unpause
     unpause = one.setPaused(False, {"from": owner})

@@ -17,7 +17,7 @@ def test_main():
     one = LegendaryOwls.deploy([], {"from": owner})
     one.setPaused(False, {"from": owner})
     # Mint
-    one.setPrice(0, {"from": owner})
+    one.setCost(0, {"from": owner})
     one.mint(1, {"from": user})
     one.setHiddenMetadataUri(HIDDEN_URI, {"from": owner})
     one.reveal(URI_PREFIX, CAGED_URI,
